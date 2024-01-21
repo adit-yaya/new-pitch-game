@@ -1,1 +1,1 @@
-# AllPitchesGame
+# new-pitch-game
