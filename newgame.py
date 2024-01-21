@@ -64,7 +64,7 @@ class NewGame(object):
     enemyAliens = ["A", "D#", "C#", "G", "B", "F"]
     friendlyAliens = ["A#", "E", "D", "G#", "C", "F#"]
     
-    aliensPerLevel = 5
+    aliensPerLevel = 1
     numElimAliens = 0 # number of eliminated aliens in one level
     
     # --- Class methods
@@ -197,6 +197,8 @@ class NewGame(object):
                 self.capturePhase = False
                 self.newPhase = True
                 self.phaseCount += 1
+            if self.currentLevel > 17:
+                self.game_over = True
             self.alienList = level_dict[self.currentLevel]
 
         if self.gamePlaying:
