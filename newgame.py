@@ -6,8 +6,11 @@ from level_dict import level_dict
 from bullet import Bullet
 from enemy import Enemy
 from player import Player
+from soundgenerator import SoundGenerator
 from global_variables import *
 import random
+import pyo
+import numpy as np
 #import pandas as pd
 
 
@@ -31,7 +34,7 @@ class NewGame(object):
     #Time measurements
     enemy_live = False #bool to tell us if there is a live enemy
     elapsedTime = 0.0 #keep track of elapsed time via frame rate changes
-    enemySpawnTime= 80.0 # of frames between enemy death and next enemy spawn
+    enemySpawnTime= 120.0 # of frames between enemy death and next enemy spawn
 
     #for transitioning from training to post test
     game_over = False
@@ -64,7 +67,7 @@ class NewGame(object):
     enemyAliens = ["A", "D#", "C#", "G", "B", "F"]
     friendlyAliens = ["A#", "E", "D", "G#", "C", "F#"]
     
-    aliensPerLevel = 1
+    aliensPerLevel = 6
     numElimAliens = 0 # number of eliminated aliens in one level
     
     # --- Class methods
@@ -79,6 +82,7 @@ class NewGame(object):
         self.gameData['Condition'] = VERSION
         self.ammo = 300
         self.score = 0
+        self.masking = True
         
         # establish the three phases of the game
         self.shootPhase = False
@@ -90,7 +94,7 @@ class NewGame(object):
         self.gamePlaying = False             
         self.currentLevel = 1
         
-        # establish where enemies are going to be pulled form
+        # establish where enemies are going to be pulled from
         self.alienList = level_dict[self.currentLevel]
         
         #create sprite lists
@@ -98,10 +102,24 @@ class NewGame(object):
         self.alienB_sprites = pygame.sprite.Group()
         self.all_sprites_list = pygame.sprite.Group()
         self.bullet_list = pygame.sprite.Group()
-         
+        
         # Create the player
         self.player = Player()
-    
+        #shot sound
+        self.shot_sound = pygame.mixer.Sound("Sounds/laser_shot.wav")
+        # #explosion sound
+        self.wrong_button = pygame.mixer.Sound("Sounds/wrong_hit.wav")
+        self.explosionSound = pygame.mixer.Sound("Sounds/explosion.wav")
+        
+        #this plays the masking stuff
+        # t = pyo.CosTable([(0,0),(50,1), (500,0.3), (8191,0)])
+        # met = pyo.Metro(time=.2).play()
+        # amp = pyo.TrigEnv(met, table=t, dur=0.18, mul=.275)
+        # freq = pyo.TrigRand(met, min=400.0, max=1000.0)
+        # self.a = pyo.Sine(freq=[freq,freq], mul=amp)
+        # self.n = pyo.Noise(mul=.035).mix(2)
+        self.sound = SoundGenerator()
+
  
     def process_events(self):
         """ Process all of the events. Return a "True" if we need
@@ -113,6 +131,7 @@ class NewGame(object):
                 self.bullet = Bullet(color, target, degree, origin)
                 self.bullet.color = str(color)
                 #play bullet sound
+                self.shot_sound.play()
                 #decrease ammo supply by 1
                 self.ammo-=1
                 # Add the bullet to the lists
@@ -120,7 +139,7 @@ class NewGame(object):
                 self.bullet_list.add(self.bullet)
             
             else:
-                self.wrong_button.out()
+                self.wrong_button.play()
          
         #Event handling
 
@@ -180,12 +199,15 @@ class NewGame(object):
             self.numElimAliens += 1
             post_mortem()
             self.score += 20
+            self.enemy.pop.play()
             self.elapsedTime = 0.0
             self.enemy_live = False
             self.previousKill = True
             check_level()
         
         def check_level():
+            if self.currentLevel > 17:
+                self.game_over = True
             if self.numElimAliens == self.aliensPerLevel:
                 self.currentLevel = self.currentLevel + 1
                 self.numElimAliens = 0
@@ -197,12 +219,12 @@ class NewGame(object):
                 self.capturePhase = False
                 self.newPhase = True
                 self.phaseCount += 1
-            if self.currentLevel > 17:
-                self.game_over = True
             self.alienList = level_dict[self.currentLevel]
 
         if self.gamePlaying:
-            #     #time to play masking noise
+            if self.masking:
+                self.sound.play_sound()
+                self.masking = False
             if not self.enemy_live and self.elapsedTime==self.enemySpawnTime:
                 #print(self.bullet_list)
                 self.alienList = level_dict[self.currentLevel]
