@@ -5,6 +5,8 @@ from global_variables import *
 #from psychopy import core
 from vector import Vector
 from player import Player
+import time
+import pyo
 
 class Enemy(pygame.sprite.Sprite):
     """ This class represents the enemies """
@@ -43,6 +45,7 @@ class Enemy(pygame.sprite.Sprite):
     target = centerScreen
     speed = 1
     targetReached = False
+    notesPlaying = False
 
     def __init__(self, enemy_type, variance = True):
         """ Constructor, create the image of the enemy/sound for enemy. Selected from three enemy types """
@@ -53,6 +56,7 @@ class Enemy(pygame.sprite.Sprite):
         self.offset_points = [(-self.offsetTime,-self.offsetTime),(SCREEN_WIDTH+self.offsetTime,-self.offsetTime),
         (SCREEN_WIDTH+self.offsetTime,SCREEN_HEIGHT//2),(SCREEN_WIDTH+self.offsetTime, SCREEN_HEIGHT+self.offsetTime), (-self.offsetTime, SCREEN_HEIGHT+self.offsetTime), (-self.offsetTime, SCREEN_HEIGHT//2)]
         #self.env = pyo.Fader(fadein=.01,fadeout=.2, dur=0) #amplitude envelope to get rid of pops
+        self.pop = pygame.mixer.Sound("Sounds/kill.wav")#for when enemy dies
         self.variance = variance
         if self.variance:
             self.ind = random.randrange(0,11,1)
@@ -61,55 +65,68 @@ class Enemy(pygame.sprite.Sprite):
         
         if self.enemy_type == 'A':
             self.image = pygame.image.load(self.enemyA_images[0])
+            self.notes = [pygame.mixer.Sound(note) for note in self.a_notes]
             self.offset_point = self.offset_points[4]
         
         elif self.enemy_type == 'D#':
             self.image = pygame.image.load(self.enemyA_images[1])
+            self.notes = [pygame.mixer.Sound(note) for note in self.dSharp_notes]
             self.offset_point = self.offset_points[1]
 
         elif self.enemy_type == 'C#':
             self.image = pygame.image.load(self.enemyA_images[2])
+            self.notes = [pygame.mixer.Sound(note) for note in self.cSharp_notes]
             self.offset_point = self.offset_points[0]
 
         elif self.enemy_type == 'G':
             self.image = pygame.image.load(self.enemyA_images[3])
+            self.notes = [pygame.mixer.Sound(note) for note in self.g_notes]
             self.offset_point = self.offset_points[3]
         
         elif self.enemy_type == 'B':
             self.image = pygame.image.load(self.enemyA_images[5])
+            self.notes = [pygame.mixer.Sound(note) for note in self.b_notes]
             self.offset_point = self.offset_points[5]
 
         elif self.enemy_type == 'F':
             self.image = pygame.image.load(self.enemyA_images[2])
+            self.notes = [pygame.mixer.Sound(note) for note in self.f_notes]
             self.offset_point = self.offset_points[2]
         
         if self.enemy_type == 'A#':
             self.image = pygame.image.load(self.enemyB_images[0])
-            self.offset_point = self.offset_points[0]
+            self.notes = [pygame.mixer.Sound(note) for note in self.aSharp_notes]
+            self.offset_point = self.offset_points[4]
 
         elif self.enemy_type == 'E':
             self.image = pygame.image.load(self.enemyB_images[1])
+            self.notes = [pygame.mixer.Sound(note) for note in self.e_notes]
             self.offset_point = self.offset_points[1]
 
         elif self.enemy_type == 'D':
             self.image = pygame.image.load(self.enemyB_images[2])
-            self.offset_point = self.offset_points[2]
+            self.notes = [pygame.mixer.Sound(note) for note in self.d_notes]
+            self.offset_point = self.offset_points[0]
 
         elif self.enemy_type == 'G#':
             self.image = pygame.image.load(self.enemyB_images[2])
+            self.notes = [pygame.mixer.Sound(note) for note in self.gSharp_notes]
             self.offset_point = self.offset_points[3]
         
         elif self.enemy_type == 'C':
             self.image = pygame.image.load(self.enemyB_images[4])
-            self.offset_point = self.offset_points[4]
+            self.notes = [pygame.mixer.Sound(note) for note in self.c_notes]
+            self.offset_point = self.offset_points[5]
 
         elif self.enemy_type == 'F#':
             self.image = pygame.image.load(self.enemyB_images[5])
-            self.offset_point = self.offset_points[5]
+            self.notes = [pygame.mixer.Sound(note) for note in self.fSharp_notes]
+            self.offset_point = self.offset_points[2]
             
         self.image = pygame.transform.smoothscale(self.image, (40,40))
         self.image.set_colorkey(WHITE)
         self.rect = self.image.get_rect()
+        self.noteindex = 0
         """self._freq = pyo.midiToHz(note)
         #get min and max +-25 cents around that note
         self._minimum = self._freq * (2.**(-25./1200.))
@@ -148,21 +165,32 @@ class Enemy(pygame.sprite.Sprite):
             self.ind -= 1
 
 
-    def playNotes(self):
-        if self.variance:
-            def repeat():
-                """we could put another function in here to vary the notes on any dimension (e.g. harmonics, fundamental freq, amplitude)"""
-                self.random_walk()
-        elif not self.variance:
-            def repeat():
-                print("no")
+    def playNotes(self): 
+        if self.notesPlaying:
+            self.sound = random.choice(self.notes).play()
+        
+        # if self.variance:
+        #     def repeat():
+        #         """we could put another function in here to vary the notes on any dimension (e.g. harmonics, fundamental freq, amplitude)"""
+        #         self.random_walk()
+        #         snd = self.notes[self.ind]
+        #         freq = snd.getRate()
+        #         self.sound = pyo.TableRead(snd, freq = freq, mul = 1).out()
+        #     self.pat = pyo.Pattern(function = repeat,time = 0.5).play()
+        # elif not self.variance:
+        #     def repeat():
+        #         self.sound.out()
+        #     self.pat = pyo.Pattern(function = repeat, time = 0.5).play()
 
     def stopNotes(self):
-        self._freq = None
+        self.notesPlaying = False
+        # self.pat = None
+        # self._freq = None
     
     def wrong_hit(self):
         """play a sound, decrease score when wrong bullet hits enemy"""
-        self.miss.out()
+        self.miss = pygame.mixer.Sound("Sounds/buzz_alt.wav")
+        self.miss.play()
     
     def update(self):
         """ Automatically called when we need to move the enemy. """
