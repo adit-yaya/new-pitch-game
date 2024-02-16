@@ -37,4 +37,3 @@ class Level(object):
     
     def load_level(self, version):
         self.__init__(version)
-        
