@@ -5,6 +5,7 @@ from newgame import NewGame
 from global_variables import *
 #from psychopy import core
 from sys import platform
+import pyo
 import pandas as pd
          
 def main():
@@ -29,12 +30,25 @@ def main():
     # Initialize Pygame and set up the window
     pygame.display.init()
     pygame.font.init()
+    pygame.mixer.init()
 
+    # Initialize sound server
+    # if platform == "linux2":
+    #     s = pyo.Server(sr = SR, buffersize=256, audio = 'jack', duplex = 0)
+    # elif platform == "win64" or platform == "win32":
+    #     s = pyo.Server(sr = SR, duplex=0)
+    #     s.setOutputDevice(14)
+    # else:
+    #     s = pyo.Server(sr = SR, duplex = 0)
+    # s.boot()
+    # s.start()
+    
     
     size = [SCREEN_WIDTH, SCREEN_HEIGHT]
     screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
     bgimage = pygame.image.load("Images/planet.bmp")
     bgimage = pygame.transform.scale(bgimage, (SCREEN_WIDTH, SCREEN_HEIGHT))
+   
      
     # Create our objects and set the data
     done = False
@@ -73,6 +87,7 @@ def main():
     #general.to_csv(directory+'generalData.csv')
 
     #shut down pyo server
+    # s.stop()
     # Close window and exit
     pygame.quit()
 
