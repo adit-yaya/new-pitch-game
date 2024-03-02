@@ -168,6 +168,8 @@ class Enemy(pygame.sprite.Sprite):
     def playNotes(self): 
         if self.notesPlaying:
             self.sound = random.choice(self.notes).play()
+            
+            
         
         # if self.variance:
         #     def repeat():
