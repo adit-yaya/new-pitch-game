@@ -188,8 +188,6 @@ class NewGame(object):
         updates positions, records data, and checks for collisions.
         """
 
-        def post_mortem():
-            self.enemy.stopNotes()
         
         def kill_enemy(enemy_type):
             font = pygame.font.Font(None, 25)
@@ -197,7 +195,7 @@ class NewGame(object):
             self.gameData['EnemyHitPlayer'].append(0)
             self.gameData['Score'].append(self.score)
             self.numElimAliens += 1
-            post_mortem()
+            self.enemy.stopNotes()
             self.score += 20
             self.enemy.pop.play()
             self.elapsedTime = 0.0
@@ -234,7 +232,7 @@ class NewGame(object):
                 print(self.enemy_type)
                 self.enemy = Enemy(self.enemy_type, variance = self.variance)
                 self.enemy.generate()
-                self.enemy.playNotes()
+                self.enemy.notesPlaying = True
                 self.all_sprites_list.add(self.enemy)
                 
                 if self.enemy_type in self.enemyAliens:
@@ -259,6 +257,7 @@ class NewGame(object):
                 if 0< self.enemy.rect.y<SCREEN_HEIGHT and 0 < self.enemy.rect.x <SCREEN_WIDTH:
                     self.score -= 1/float(60) # decrease score by 1 for every second that enemy is alive
                     self.sight = False
+                self.enemy.playNotes()
 
             
             # Move all the sprites
