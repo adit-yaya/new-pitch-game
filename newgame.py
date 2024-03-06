@@ -69,6 +69,8 @@ class NewGame(object):
     
     aliensPerLevel = 6
     numElimAliens = 0 # number of eliminated aliens in one level
+
+
     
     # --- Class methods
     # Set up the game
@@ -119,7 +121,7 @@ class NewGame(object):
         # self.a = pyo.Sine(freq=[freq,freq], mul=amp)
         # self.n = pyo.Noise(mul=.035).mix(2)
         self.sound = SoundGenerator()
-
+        self.PLAY_NOTES = pygame.USEREVENT + 1
  
     def process_events(self):
         """ Process all of the events. Return a "True" if we need
@@ -177,8 +179,10 @@ class NewGame(object):
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     self.player.turnLeft = False
-                elif event.key == pygame.K_RIGHT:
+                elif event.key == pygame.K_RIGHT: 
                     self.player.turnRight = False
+            if event.type == self.PLAY_NOTES:
+                self.enemy.playNotes()
 
         return False #for exiting game
  
@@ -187,7 +191,8 @@ class NewGame(object):
         This method is run each time through the frame. It
         updates positions, records data, and checks for collisions.
         """
-
+        def post_mortem():
+            self.enemy.stopNotes()
         
         def kill_enemy(enemy_type):
             font = pygame.font.Font(None, 25)
@@ -195,7 +200,7 @@ class NewGame(object):
             self.gameData['EnemyHitPlayer'].append(0)
             self.gameData['Score'].append(self.score)
             self.numElimAliens += 1
-            self.enemy.stopNotes()
+            post_mortem()
             self.score += 20
             self.enemy.pop.play()
             self.elapsedTime = 0.0
@@ -223,6 +228,7 @@ class NewGame(object):
             if self.masking:
                 self.sound.play_sound()
                 self.masking = False
+                
             if not self.enemy_live and self.elapsedTime==self.enemySpawnTime:
                 #print(self.bullet_list)
                 self.alienList = level_dict[self.currentLevel]
@@ -248,6 +254,7 @@ class NewGame(object):
                 #     self.player.speed+=1
                 
                 self.enemy_live = True
+                pygame.time.set_timer(self.PLAY_NOTES, 300)
             
             if self.enemy_live:
                 """ Record time right when enemy fully enters screen """
@@ -256,8 +263,9 @@ class NewGame(object):
                 #when enemy enters screen, decrease score
                 if 0< self.enemy.rect.y<SCREEN_HEIGHT and 0 < self.enemy.rect.x <SCREEN_WIDTH:
                     self.score -= 1/float(60) # decrease score by 1 for every second that enemy is alive
-                    self.sight = False
-                self.enemy.playNotes()
+                    self.sight = False 
+                
+            
 
             
             # Move all the sprites
