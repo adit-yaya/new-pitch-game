@@ -165,8 +165,8 @@ class Enemy(pygame.sprite.Sprite):
             self.ind -= 1
 
 
-    def playNotes(self): 
-        if self.notesPlaying:
+    def playNotes(self):
+        if self.notesPlaying: 
             self.sound = random.choice(self.notes).play()
             
             
